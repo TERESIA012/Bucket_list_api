@@ -111,11 +111,34 @@ def todos():
         todo_data={}
         todo_data['title']=todo.title
         todo_data ['id']=todo.id
+        todo_data ['user_id']=todo.user_id
         todo_data['text']=todo.text
         todo_data['complete']=todo.complete
         output.append(todo_data)
         
     return jsonify({'todos': output})
+
+@app.route('/bucketlist/<user_id>/user',methods=['GET'])
+def get_todos_by_user(user_id):
+    
+    todo=Bucketlist.query.filter_by(user_id=user_id).all()
+    
+    if not todo:
+        return jsonify({'message':'No todo Found!'})
+    
+    
+    todo_data={}
+    todo_data['title']=todo.title
+    todo_data ['id']=todo.id
+    todo_data['text']=todo.text
+    todo_data['complete']=todo.complete
+    
+    
+    return jsonify(todo_data)
+    
+    
+    
+
 
 @app.route('/bucketlist/<todo_id>',methods=['GET'])
 def get_one_todo(todo_id):
@@ -142,7 +165,7 @@ def create_todo():
     
     data =request.get_json()
     
-    new_todo= Bucketlist(text=data['text'],complete=False)
+    new_todo= Bucketlist(text=data['text'],user_id=data['user_id'],complete=False)
     db.session.add(new_todo)
     db.session.commit()
      
