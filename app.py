@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import uuid
-
+from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import request
 from flask import jsonify
@@ -11,7 +11,7 @@ from flask_migrate import Migrate
 # initialize app
 
 app = Flask(__name__)
-
+CORS(app)
 app.config['SECRET_KEY'] = 'gaidi'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://developer:developerwilson@localhost/bucketlist'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -84,6 +84,22 @@ def create_user():
     return jsonify({'message': 'New User Created!'})
 
 
+# login user
+@app.route('/user/login', methods=['POST'])
+def login_user():
+    auth = request.get_json()
+    user = User.query.filter_by(name=auth['name']).first()
+
+    if not user:
+        return jsonify({'message': 'No user found!'})
+
+    if check_password_hash(user.password, auth['password']):
+        token = user.public_id
+        return jsonify({'token': token})
+
+    return jsonify({'message': 'Wrong Password!'})
+
+
 @app.route('/user/<public_id>', methods=['DELETE'])
 def delete_user(public_id):
 
@@ -114,7 +130,7 @@ def todos():
         todo_data['complete'] = todo.complete
         output.append(todo_data)
 
-    return jsonify({'todos': output})
+    return jsonify(output)
 
 
 # get all todos for a specific user (user_id) 
