@@ -56,7 +56,7 @@ def get_all_users():
         user_data['created_at'] = user.created_at
         output.append(user_data)
 
-    return jsonify({'users': output})
+    return jsonify(output)
 
 
 @app.route('/user/<public_id>', methods=['GET'])
@@ -134,6 +134,7 @@ def todos():
         todo_data['user_id'] = todo.user_id
         todo_data['text'] = todo.text
         todo_data['complete'] = todo.complete
+        todo_data['created_at'] = todo.created_at
         output.append(todo_data)
 
     return jsonify(output)
@@ -206,6 +207,26 @@ def complete_todo(todo_id):
     db.session.commit()
 
     return jsonify({'message': 'To do item has been completed!'})
+
+
+# update a todo
+@app.route('/bucketlist/<todo_id>/update', methods=['PUT'])
+def update_todo(todo_id):
+    
+        data = request.get_json()
+    
+        todo = Bucketlist.query.filter_by(id=todo_id).first()
+    
+        if not todo:
+            return jsonify({'message': 'No todo Found!'})
+    
+        todo.text = data['text']
+        todo.title = data['title']
+        todo.complete = data['complete']
+    
+        db.session.commit()
+    
+        return jsonify({'message': 'To do item has been updated!'})
 
 
 @app.route('/bucketlist/<todo_id>', methods=['DELETE'])
