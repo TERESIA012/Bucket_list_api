@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import request
 from flask import jsonify
 from flask_migrate import Migrate
-
+import datetime
 
 # initialize app
 
@@ -25,8 +25,10 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(50))
+    email = db.Column(db.String(50))
     password = db.Column(db.String(250))
     admin = db.Column(db.Boolean)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     bucketlist = db.relationship('Bucketlist', backref='user', lazy='dynamic')
 
 
@@ -35,6 +37,7 @@ class Bucketlist(db.Model):
     title = db.Column(db.String(100))
     text = db.Column(db.String(100))
     complete = db.Column(db.Boolean)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
@@ -47,8 +50,10 @@ def get_all_users():
         user_data = {}
         user_data['public_id'] = user.public_id
         user_data['name'] = user.name
+        user_data['email'] = user.email
         user_data['password'] = user.password
         user_data['admin'] = user.admin
+        user_data['created_at'] = user.created_at
         output.append(user_data)
 
     return jsonify({'users': output})
@@ -65,6 +70,7 @@ def get_one_user(public_id):
     user_data = {}
     user_data['public_id'] = user.public_id
     user_data['name'] = user.name
+    user_data['email'] = user.email
     user_data['password'] = user.password
     user_data['admin'] = user.admin
 
@@ -77,7 +83,7 @@ def create_user():
 
     hashed_password = generate_password_hash(data['password'], method='sha256')
     new_user = User(public_id=str(uuid.uuid4()),
-                    name=data['name'], password=hashed_password, admin=False)
+                    name=data['name'], password=hashed_password, admin=False, email=data['email'])
     db.session.add(new_user)
     db.session.commit()
 
@@ -174,7 +180,7 @@ def get_one_todo(todo_id):
     return jsonify(todo_data)
 
 
-@app.route('/bucketlist', methods=['POST'])
+@app.route('/bucketlist', methods=['POST']) # create a todo
 def create_todo():
 
     data = request.get_json()
