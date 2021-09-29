@@ -26,6 +26,8 @@ class User(db.Model):
     name = db.Column(db.String(50))
     password=db.Column(db.String(250))
     admin=db.Column(db.Boolean)
+    bucketlist = db.relationship('Bucketlist', backref='user', lazy='dynamic')
+    
     
     
 class Bucketlist(db.Model):
@@ -121,17 +123,23 @@ def todos():
 @app.route('/bucketlist/<user_id>/user',methods=['GET'])
 def get_todos_by_user(user_id):
     
-    todo=Bucketlist.query.filter_by(user_id=user_id).all()
+    todos=Bucketlist.query.filter_by(user_id=user_id).all()
     
-    if not todo:
+    if not todos:
         return jsonify({'message':'No todo Found!'})
-    
-    
     todo_data={}
-    todo_data['title']=todo.title
-    todo_data ['id']=todo.id
-    todo_data['text']=todo.text
-    todo_data['complete']=todo.complete
+    
+    for todo in todos:
+        todo_data['title']=todo.title
+        todo_data ['id']=todo.id
+        todo_data['text']=todo.text
+        todo_data['complete']=todo.complete
+    
+        
+
+    
+    
+    
     
     
     return jsonify(todo_data)
@@ -165,7 +173,7 @@ def create_todo():
     
     data =request.get_json()
     
-    new_todo= Bucketlist(text=data['text'],user_id=data['user_id'],complete=False)
+    new_todo= Bucketlist(text=data['text'],user_id=data['user_id'],title=data['title'],complete=False)
     db.session.add(new_todo)
     db.session.commit()
      
