@@ -68,13 +68,14 @@ def get_one_user(public_id):
         return jsonify({'message': 'No user found!'})
 
     user_data = {}
+    user_data['id'] = user.id
     user_data['public_id'] = user.public_id
     user_data['name'] = user.name
     user_data['email'] = user.email
     user_data['password'] = user.password
     user_data['admin'] = user.admin
 
-    return jsonify({'user': user_data})
+    return jsonify(user_data)
 
 
 @app.route('/user/create', methods=['POST'])
@@ -90,8 +91,7 @@ def create_user():
     return jsonify({'message': 'New User Created!'})
 
 
-
-@app.route('/user/login', methods=['POST']) # login user
+@app.route('/user/login', methods=['POST'])  # login user
 def login_user():
     auth = request.get_json()
     user = User.query.filter_by(email=auth['email']).first()
@@ -116,9 +116,7 @@ def login_user():
     # return jsonify({'message': 'Wrong Password!'})
 
 
-
-
-@app.route('/user/logout', methods=['GET']) # logout user
+@app.route('/user/logout', methods=['GET'])  # logout user
 def logout_user():
     session.clear()
     return jsonify({'message': 'User logged out!'})
@@ -166,17 +164,15 @@ def get_todos(user_id):
     todos = Bucketlist.query.filter_by(user_id=user_id).all()
     # create an empty list
     output = []
-    # loop through all todos
+
     for todo in todos:
-        # create a dictionary
         todo_data = {}
-        # add the todo data to the dictionary
         todo_data['title'] = todo.title
         todo_data['id'] = todo.id
         todo_data['user_id'] = todo.user_id
         todo_data['text'] = todo.text
         todo_data['complete'] = todo.complete
-        # add the dictionary to the output list
+        todo_data['created_at'] = todo.created_at
         output.append(todo_data)
 
     return jsonify(output)
