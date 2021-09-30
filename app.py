@@ -102,9 +102,9 @@ def login_user():
     else:
         if check_password_hash(user.password, auth['password']):
             session['logged_in'] = True
-            # token = user.public_id
-            # return jsonify({'token': token})
-            return jsonify({'message': 'User logged in!'})
+            token = user.public_id
+            return jsonify({'token': token})
+            # return jsonify({'message': 'User logged in!'})
             # status = True
         else:
             return jsonify({'message': 'Wrong password!'})
