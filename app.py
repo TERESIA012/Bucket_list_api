@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 import uuid
 from flask_cors import CORS
@@ -77,7 +77,7 @@ def get_one_user(public_id):
     return jsonify({'user': user_data})
 
 
-@app.route('/user/', methods=['POST'])
+@app.route('/user/create', methods=['POST'])
 def create_user():
     data = request.get_json()
 
@@ -90,20 +90,38 @@ def create_user():
     return jsonify({'message': 'New User Created!'})
 
 
-# login user
-@app.route('/user/login', methods=['POST'])
+
+@app.route('/user/login', methods=['POST']) # login user
 def login_user():
     auth = request.get_json()
-    user = User.query.filter_by(name=auth['name']).first()
+    user = User.query.filter_by(email=auth['email']).first()
 
     if not user:
         return jsonify({'message': 'No user found!'})
+        # status = False
+    else:
+        if check_password_hash(user.password, auth['password']):
+            session['logged_in'] = True
+            # token = user.public_id
+            # return jsonify({'token': token})
+            return jsonify({'message': 'User logged in!'})
+            # status = True
+        else:
+            return jsonify({'message': 'Wrong password!'})
 
-    if check_password_hash(user.password, auth['password']):
-        token = user.public_id
-        return jsonify({'token': token})
+    # if check_password_hash(user.password, auth['password']):
+    #     token = user.public_id
+    #     return jsonify({'token': token})
 
-    return jsonify({'message': 'Wrong Password!'})
+    # return jsonify({'message': 'Wrong Password!'})
+
+
+
+
+@app.route('/user/logout', methods=['GET']) # logout user
+def logout_user():
+    session.clear()
+    return jsonify({'message': 'User logged out!'})
 
 
 @app.route('/user/<public_id>', methods=['DELETE'])
@@ -140,7 +158,7 @@ def todos():
     return jsonify(output)
 
 
-# get all todos for a specific user (user_id) 
+# get all todos for a specific user (user_id)
 @app.route('/bucketlist/<user_id>/user', methods=['GET'])
 def get_todos(user_id):
 
@@ -161,8 +179,7 @@ def get_todos(user_id):
         # add the dictionary to the output list
         output.append(todo_data)
 
-    return jsonify({'todos': output})
-
+    return jsonify(output)
 
 
 @app.route('/bucketlist/<todo_id>', methods=['GET'])
@@ -181,7 +198,7 @@ def get_one_todo(todo_id):
     return jsonify(todo_data)
 
 
-@app.route('/bucketlist', methods=['POST']) # create a todo
+@app.route('/bucketlist', methods=['POST'])  # create a todo
 def create_todo():
 
     data = request.get_json()
@@ -212,21 +229,21 @@ def complete_todo(todo_id):
 # update a todo
 @app.route('/bucketlist/<todo_id>/update', methods=['PUT'])
 def update_todo(todo_id):
-    
-        data = request.get_json()
-    
-        todo = Bucketlist.query.filter_by(id=todo_id).first()
-    
-        if not todo:
-            return jsonify({'message': 'No todo Found!'})
-    
-        todo.text = data['text']
-        todo.title = data['title']
-        todo.complete = data['complete']
-    
-        db.session.commit()
-    
-        return jsonify({'message': 'To do item has been updated!'})
+
+    data = request.get_json()
+
+    todo = Bucketlist.query.filter_by(id=todo_id).first()
+
+    if not todo:
+        return jsonify({'message': 'No todo Found!'})
+
+    todo.text = data['text']
+    todo.title = data['title']
+    todo.complete = data['complete']
+
+    db.session.commit()
+
+    return jsonify({'message': 'To do item has been updated!'})
 
 
 @app.route('/bucketlist/<todo_id>', methods=['DELETE'])
